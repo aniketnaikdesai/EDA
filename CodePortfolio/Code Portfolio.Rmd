@@ -37,12 +37,12 @@ df["first_name"] #print element with name "first_name"
 
 ## Matrix -----
 m <- matrix(x, nrow = 3, ncol = 3,dimnames = list(rownames, colnames)) #vector x is split by 3 rows and 3 columns, also need to give bycol=True or byrow=True. defaults to byrow
-# dimnames is the names of the row and cols that you just created
-# matrix can be manipulated with math symbolic functions
-# t(m) # gives the transpose
-# use cbind(m, n) to combine 2 matixes columns i.e. horizontally expanding
-# and use rbind(m,n) for rowwise
-# c(m) will combine the matrix into a vector by the column
+dimnames is the names of the row and cols that you just created
+matrix can be manipulated with math symbolic functions
+t(m) # gives the transpose
+use cbind(m, n) to combine 2 matixes columns i.e. horizontally expanding
+and use rbind(m,n) for rowwise
+c(m) will combine the matrix into a vector by the column
 
 ## Working Directory -----
 setwd("C://file/path") #set the working directory, the slash needs to be "/". "\" gives error
@@ -71,19 +71,19 @@ fun_name <- function(var){
   Do something
   return(new_variable)
 }
-# Allows to create new functions incase some code is repeatedly used
-# var is the variable you want to pass to the code
+Allows to create new functions incase some code is repeatedly used
+var is the variable you want to pass to the code
 
 ## Loop -----
 for (var in sequence/vector/result_set/list){
   print "for"
 }
-# can be used to parse through a list created through another fuctions eg list of files in a directory
+can be used to parse through a list created through another fuctions eg list of files in a directory
 
 while (condition if true){
   print "while"
 }
-#condition is a logical comparison, some languages treat any integer>0 as true
+condition is a logical comparison, some languages treat any integer>0 as true
 
 ## Sort functions ----
 sort(df$x) #sort ascending
@@ -97,8 +97,8 @@ if (condition){
 } else {
   print "else"
 }
-#condition is a logical comparison, some languages treat any integer>0 as true
-#if works as a array operator and as object operator. you will get error if you pass array to the object operator one
+condition is a logical comparison, some languages treat any integer>0 as true
+if works as a array operator and as object operator. you will get error if you pass array to the object operator one
 
 ## Load from R data file -----
 load("file.RData")
@@ -143,7 +143,7 @@ read_csv(f, skip = x) #To skip a x lines from the top of file
 
 # Comma delimited file
 write_csv(df, path, na = "NA") #append = FALSE, col_names = !append options in all to append new data to existing file
-#delim defaults to " " for write_delim(), "," for write_excel_csv() and ";" for write_excel_csv2()
+delim defaults to " " for write_delim(), "," for write_excel_csv() and ";" for write_excel_csv2()
 
 # File with arbitrary delimiter
 write_delim(df, path, delim = " ", na = "NA")
@@ -171,7 +171,7 @@ as.factor #change to a factor with levels, cannot specify anything else. sometim
 
 ## Useful functions -----
 factor(x = df$x, levels = levels_in_df, labels = levels_i_want,exclude = NA, ordered = TRUE/FALSE, nmax = NA)
-#useful to use a complete option than to use defaults
+useful to use a complete option than to use defaults
 
 rm(a, b, ..) #remove some objects
 rm(list = ls()) #remove all objects
