@@ -7,5 +7,5 @@ This folder contains code examples learnt during the course. This can be used as
 # Topics:-
 Basics Operations, Matrices, Data Import and Export, Data Filtering, Data Manipulation, Data Visualization, and Clustering.
 
-##Final Project:-
+## Final Project:-
 To be completed. This folder will be updated as and when project progresses towards completion.
