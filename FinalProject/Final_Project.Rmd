@@ -20,11 +20,11 @@ gm_raw <- read_csv("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/
 ```
 
 
-#```{r Data_wrangling, echo=FALSE, message=FALSE, warning=FALSE}
-```{r}
+```{r Data_wrangling, echo=FALSE, message=FALSE, warning=FALSE}
+
 #Filling NA's
 gm_nona <- gm_raw
 gm_nona <- gm_raw %>% fill(population)
 
-gm_nona[is.na(gm_nona$income),1] %>% unique()
+#There are some NA values in income
 ```
