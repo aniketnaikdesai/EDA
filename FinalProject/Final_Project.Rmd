@@ -2,13 +2,15 @@
 title: "Final_Project"
 author: "Aniket Naik Desai"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-## Questions for EDA
+## Questions for Exploratory Data Analysis of gapminder dataset
 1. At the same income level, does increase in average life expectancy vary based on region?
 2. Has average life expectancy increased in all regions at the same rate over the years?
 3. At what income level does the increase in life expectancy stop increasing for the various regions?
@@ -22,9 +24,10 @@ library(mice)
 library(VIM)
 
 
-gm_raw <- read_csv("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/FinalProject/Data/gapminder.csv", col_types = "ffniif")
-```
+gm_raw <- read_csv("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/FinalProject/Data/gapminder.csv", col_types = "fnniif")
 
+
+```
 
 ```{r Data_Screening, echo=FALSE, message=FALSE, warning=FALSE}
 #Filling NA's
@@ -74,13 +77,24 @@ country_summary
 Countries which have NA Values income variable don't have any non-NA income values. We cannot use mice to impute the missing values. We might need to either ignore/delete the affected rows or use mean replacement based on mean of the region for the year.
 
 ```{r Compute average yearwise regional income, echo=FALSE, message=FALSE, warning=FALSE}
-mean(na.rm = TRUE)
+
 
 yearwise_regional_income <- gm_nona %>% group_by(region,Year) %>% summarise(avg_income = mean(income, na.rm = TRUE))
 
 yearwise_regional_income[yearwise_regional_income$region=="South Asia" & yearwise_regional_income$Year==1800,]
-  
 ```
 
 
+# Data Description
+We have `r nrow(gm_raw)` observations and `r ncol(gm_raw)` variables. Two variables are categorical and four variables are continous.
+
+## Type of Data Variables
+Country and region are categorical variables with 197 levels and 6 levels respectively. Year, Population, Life, and income are numeric variables. Life variable is the life expectancy of the population while income is calculated as gdp per capita.
+
+## Missing Values
+The missing population values were filled with the population count at the start of the decade. We have `r sum(is.na(gm_raw$income))` NA values in the income variable spread over `r nrow(country_summary)` countries. These countries do not have any income values recorded in the dataset hence we are not able to compute any values to replace the NA values. Due to this in any calculation involving income we will ignore the following countries `r country_summary$Country`.
+
+## Data Dispersion
+We have data about `r nrow(country_all)` countries over `r nrow(regionwise_summary)` regions. Our data has been gathered over `r max(gm_raw$Year)-min(gm_raw$Year)` years starting from `r max(gm_raw$Year)`  up till ` r min(gm_raw$Year)`. The population of all countries changed over time with xyz country from region having the highest population in 2015 and country from region having the lowest population.
+unique(gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1])
 

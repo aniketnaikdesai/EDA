@@ -1,0 +1,13 @@
+---
+title: "temp"
+author: "Aniket Naik Desai"
+date: "June 15, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Description
+We have `r nrow(gm_raw)` observations and `r ncol(gm_raw)` variables. The missing population values were filled with the population count at the start of the decade. We have `r sum(is.na(gm_raw$income))` NA values in the income variable over. Since the countries with the NA income values do not have any income 
