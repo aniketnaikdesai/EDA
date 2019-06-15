@@ -9,9 +9,9 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ## Questions for EDA
-At the same income level, does increase in average life expectancy vary based on region?
-At the same income level, has increased average life expectancy caused increase in population?
-Has average life expectancy increased in all regions at the same rate over the years?
+1. At the same income level, does increase in average life expectancy vary based on region?
+2. Has average life expectancy increased in all regions at the same rate over the years?
+3. At what income level does the increase in life expectancy stop increasing for the various regions?
 
 
 ```{r Initital_Loading, echo=FALSE, message=FALSE, warning=FALSE}
@@ -71,4 +71,16 @@ country_summary
 
 ```
 
-Countries which have NA Values don't have any non-NA values. We cannot use mice to impute the values. we might need to use mean replacement based on mean of the region for that year
+Countries which have NA Values income variable don't have any non-NA income values. We cannot use mice to impute the missing values. We might need to either ignore/delete the affected rows or use mean replacement based on mean of the region for the year.
+
+```{r Compute average yearwise regional income, echo=FALSE, message=FALSE, warning=FALSE}
+mean(na.rm = TRUE)
+
+yearwise_regional_income <- gm_nona %>% group_by(region,Year) %>% summarise(avg_income = mean(income, na.rm = TRUE))
+
+yearwise_regional_income[yearwise_regional_income$region=="South Asia" & yearwise_regional_income$Year==1800,]
+  
+```
+
+
+
