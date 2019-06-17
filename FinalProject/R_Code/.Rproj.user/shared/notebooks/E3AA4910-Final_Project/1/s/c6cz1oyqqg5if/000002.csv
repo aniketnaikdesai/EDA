@@ -1,0 +1,3 @@
+"0","gm_prepd <- gm_nona"
+"0","gm_prepd$population <- log(gm_prepd$population)"
+"0","gm_prepd$income <- log(gm_prepd$income)"
