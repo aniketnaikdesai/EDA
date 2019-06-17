@@ -1,0 +1,209 @@
+---
+title: "Final_Project"
+author: "Aniket Naik Desai"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(tinytex.verbose = TRUE)
+```
+## Questions for Exploratory Data Analysis of gapminder dataset
+1. At the same income level, does increase in average life expectancy vary based on region?
+2. Has average life expectancy increased in all regions at the same rate over the years?
+3. At what income level does the increase in life expectancy stop increasing for the various regions?
+
+
+```{r Initital_Loading, echo=FALSE, message=FALSE, warning=FALSE}
+setwd("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/FinalProject/R_Code")
+
+library(tidyverse)
+library(mice)
+library(VIM)
+library(cluster)    
+library(factoextra)
+library(dendextend)
+
+gm_raw <- read.csv("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/FinalProject/Data/gapminder.csv")
+gm_raw$population = gsub(",","",gm_raw$population)
+gm_raw$population <- as.numeric(gsub(",","",gm_raw$population))
+
+```
+
+```{r Data_Screening, echo=FALSE, message=FALSE, warning=FALSE}
+#Filling NA's
+gm_nona <- gm_raw
+
+gm_nona <- gm_raw %>% fill(population)
+
+income_na <- gm_nona[is.na(gm_nona$income),]
+```
+
+```{r Data Wrangling for Missing income, echo= FALSE, message=FALSE, warning=FALSE}
+#How many countries are missing income values per region
+regionwise_na <- income_na%>%group_by(region)%>%count(Country)%>%count(region)
+regionwise_na$miss <- regionwise_na$n
+regionwise_na$n <- NULL
+
+regionwise_nona <- gm_nona %>% group_by(region) %>% count(Country) %>% count(region)
+regionwise_nona$total <- regionwise_nona$n
+regionwise_nona$n <- NULL
+
+regionwise_summary <- left_join(regionwise_nona,regionwise_na)
+regionwise_summary <- regionwise_summary %>% mutate(miss = replace_na(miss,0)) %>% mutate(percentage_na = (miss*100/total)) %>% mutate(percentage_na = round(percentage_na, digits = 2))
+
+country_all <- gm_nona %>% group_by(region) %>% count(Country)
+country_all$region <- NULL
+
+country_na <- income_na%>%group_by(region)%>%count(Country)
+country_na$region <- NULL
+country_na$miss <- country_na$n
+
+country_summary <- left_join(country_all, country_na)
+country_summary_na <- country_summary[!(is.na(country_summary$miss)),] #remoces all the non-miss values
+```
+
+```{r Compute average yearwise regional income, echo=FALSE, message=FALSE, warning=FALSE}
+#Compute average yearwise regional income
+yearwise_regional_income <- gm_nona %>% group_by(region,Year) %>% summarise(avg_income = mean(income, na.rm = TRUE))
+```
+
+# Data Description
+We have `r nrow(gm_raw)` observations and `r ncol(gm_raw)` variables. Two variables of the six variables are categorical and four variables are continous.
+
+## Type of Data Variables
+Country and region are categorical variables with 197 levels (countries) and 6 levels (regions) respectively. Year, Population, Life, and income are numeric variables. Life variable is the life expectancy of the population while income is calculated as gdp per capita.
+
+## Missing Values
+We have missing values in population and income variables. The missing population values were filled with the population count at the start of the decade. We have `r sum(is.na(gm_raw$income))` NA values in the income variable spread over `r sum(!(is.na(country_summary$miss)))` countries. These countries do not have any income values recorded in the dataset hence we are not able to compute any values to replace the NA values. Hence, in any calculation involving income we will ignore the following countries `r country_summary_na$Country`.
+
+## Data Dispersion
+We have data about `r nrow(country_all)` countries which are divided into `r nrow(regionwise_summary)` regions. Our data has been gathered over `r max(gm_raw$Year) - min(gm_raw$Year)` years starting from `r min(gm_raw$Year)`  up till `r max(gm_raw$Year)` . The population of all countries changed over time with `r gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1]`  from `r gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1]` region having the highest population in 2015 and `r gm_nona[gm_nona$population==min(gm_nona[gm_nona$Year==2015,4]),1]` from `r gm_nona[gm_nona$population==min(gm_nona[gm_nona$Year==2015,4]),6]` region having the lowest population in 2015.
+
+The `r nrow(regionwise_summary)` regions do not have equal number of countries with `r regionwise_summary[regionwise_summary$total==max(regionwise_summary$total),1]` having the highest number of countries (`r  regionwise_summary[regionwise_summary$total==max(regionwise_summary$total),2]`) and `r regionwise_summary[regionwise_summary$total==min(regionwise_summary$total),1]` having the lowest number of countries (`r regionwise_summary[regionwise_summary$total==min(regionwise_summary$total),2]`).
+
+Life expectacy has varied greatly with Fiji, French Polynesia, and Samoa showing a low of 1 year life expectacy in the years 1875, 1918, and 1918 respectively. With `r gm_nona[gm_nona$life==max(gm_nona$life),1]` showing the highest life expectacy of `r gm_nona[gm_nona$life==max(gm_nona$life),3]` in `r gm_nona[gm_nona$life==max(gm_nona$life),2]`. The overall mean for life was `r mean(gm_nona[gm_nona$Year==2015,3])` in 2015. Regionwise this  was 
+
+Income has range has been very wide with United Arab Emirates having the peak income of `r max(gm_nona$income,na.rm = TRUE)` in the year 1980. In the year 2015, Kuwait had the highest income of `r max(gm_nona[gm_nona$Year==2015,5],na.rm = TRUE)` while Somalia had the lowest income of `r min(gm_nona[gm_nona$Year==2015,5],na.rm = TRUE)` in 2015.
+
+## Outliers
+
+```{r Outliers, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(gm_nona, aes(x = region, y = life))  + geom_boxplot(outlier.colour = "red") +  
+geom_jitter(position = position_jitter(width = 0.1, height = 0), alpha = 1/4) + labs(title="Life Expectancy Trending Over Region", x="Region", y="Life")
+
+ggplot(gm_nona, aes(x = region, y = population))  + geom_boxplot(outlier.colour = "red") +  
+geom_jitter(position = position_jitter(width = 0.1, height = 0), alpha = 1/4) + labs(title="Population Trending Over Region", x="Region", y="population")
+
+ggplot(gm_nona, aes(x = region, y = life))  + geom_boxplot(outlier.colour = "red") +  
+geom_jitter(position = position_jitter(width = 0.1, height = 0), alpha = 1/4) + labs(title="Population Trending Over Region", x="Region", y="life")
+```
+We see that we have a few outliers in population and income but we can ignore these are we will do a log scaling to take care of it. Life does not have any large outliers that we need to do any trasformation.
+
+## Data Preprocessing
+We saw in our initial analysis that we have a very wide range for population and income. This is  detrimental to our analysis as values from a few countries will cause a heavy bias and potentially give us wrong observations/results. Hence, we will log transform the population and income variables. This will help us lower the range and weight of the outliers.
+
+```{r Data Preprocessing, echo=FALSE, message=FALSE, warning=FALSE}
+gm_prepd <- gm_nona
+gm_prepd$population <- log(gm_prepd$population)
+gm_prepd$income <- log(gm_prepd$income)
+```
+
+## Data Wrangling
+```{r Data Wrangling All, echo=FALSE, message=FALSE, warning=FALSE}
+region_life_year <- gm_nona %>% group_by(region,Year) %>% summarise(average_life = mean(life))
+```
+
+## Exploratory Data
+```{r Plots, echo=FALSE,message=FALSE, warning=FALSE}
+plot(gm_nona$income,gm_nona$life,data=gm_nona,main = "Life v/s income",xlab = "Income",ylab = "Life")
+
+region_life_year[region_life_year$Year%%10 == 0,] %>%
+  as_tibble() %>%
+  ggplot(aes(Year, average_life, color = region,label = region)) +
+  ggtitle("Life Longeivity Over The Years")+
+  geom_line()
+```
+We see a definite correlation between life and income levels, we start seeing some oddities when we go part $50,000 where the increase in income has less effect on the increase in life expectancy.
+
+
+### Clustering
+
+We have done the custering for data in the year 2015. When doing clustering we will need to omit the rows with missing values in income field.
+
+# Kmeans
+```{r Clustering Kmeans,echo=FALSE, message=FALSE, warning=FALSE}
+# filtering year 2015
+gm_prepd_omited <- gm_prepd[gm_prepd$Year==2015,]
+
+# Omiting NA and Scaling
+gm_prepd_omited <- na.omit(gm_prepd_omited)
+gm_prepd_scaled <- gm_prepd_omited
+gm_prepd_scaled[3:5] <- scale(gm_prepd_omited[3:5])
+
+# creating a subset with numeric values only
+gm_clus_sub <- gm_prepd_omited[3:5] 
+
+# calculating the Optimal number of clusters
+set.seed(123)
+fviz_nbclust(gm_clus_sub, kmeans, method = "silhouette")
+
+# creating the cluster
+k_cluster <- kmeans(gm_clus_sub, centers = 2, nstart = 25)
+
+# adding cluster back to the dataset
+gm_kmean_final <- gm_prepd_omited %>% mutate(Cluster = k_cluster$cluster)
+
+gm_kmean_final$Country <- as.character(gm_kmean_final$Country)
+gm_kmean_final$Cluster <- factor(gm_kmean_final$Cluster)
+
+gm_kmean_final %>%
+  as_tibble() %>%
+  ggplot(aes(income, life, color = Cluster, label = Country)) +
+  geom_text()+
+  ggtitle("Life v/s Income - Kmeans Cluster")
+
+
+```
+We choose 2 clusters based on silhouette method. We see that in Kmeans Cluster the countries are more or less divided based on the life expectacy in 2015. The cutoff seems to be near 70 years of life expectancy. This also points to an interesting fact that richer countries don't actually live longer than poorer countries.
+
+# Hierarchical Cluster
+```{r Clustering Hierarchical,echo=FALSE, message=FALSE, warning=FALSE}
+# we areadly have the input data prepared
+
+# Dissimilarity matrix
+ed <- dist(gm_clus_sub, method = "euclidean")
+
+# Hierarchical clustering using Complete Linkage
+hc1 <- hclust(ed, method = "complete" )
+
+# Cut tree into 4 groups
+sub_grp <- cutree(hc1, k = 2)
+
+# adding back to data
+gm_hc_final <- gm_prepd_omited %>%  mutate(Cluster = sub_grp)
+gm_hc_final$Cluster <- factor(gm_hc_final$Cluster)
+
+gm_hc_final %>%
+  as_tibble() %>%
+  ggplot(aes(income, life, color = Cluster, label = Country)) +
+  geom_text()+
+  ggtitle("Life v/s Income - Hierarchical Cluster")
+
+
+```
+We choose 2 clusters based on silhouette method. We see similar results with the cluster being separated long life variable but here the cutoff seems to be slightly lower than 70 years.
+
+## Summary
+We see that at the same income level,  increase in average life expectancy varies based on region. It increases sharply in 1950's for all regions but in different levels. Average life expectancy has not increased in all regions at the same rate over the years. Middle east region has lead the increase since 1950. At 50,000 income level the increase in life expectancy stop increasing as sharply and we see that the growth is minimal.
+
+```{r}
+
+warnings()
+```
+

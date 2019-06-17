@@ -3,14 +3,15 @@ title: "Final_Project"
 author: "Aniket Naik Desai"
 date: "`r Sys.Date()`"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
   word_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(tinytex.verbose = TRUE)
 ```
 ## Questions for Exploratory Data Analysis of gapminder dataset
 1. At the same income level, does increase in average life expectancy vary based on region?
@@ -28,12 +29,8 @@ library(cluster)
 library(factoextra)
 library(dendextend)
 
-gm_raw <- read_csv("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/FinalProject/Data/gapminder.csv", col_types = "fnniif")
-
-gm_raw$population = gsub(",","",gm_raw$population)
-
 gm_raw <- read.csv("C:/Users/scyth/OneDrive/Documents/HarrisburgU/AN_506_OS/EDA/FinalProject/Data/gapminder.csv")
-
+gm_raw$population = gsub(",","",gm_raw$population)
 gm_raw$population <- as.numeric(gsub(",","",gm_raw$population))
 
 ```
@@ -86,9 +83,9 @@ Country and region are categorical variables with 197 levels (countries) and 6 l
 We have missing values in population and income variables. The missing population values were filled with the population count at the start of the decade. We have `r sum(is.na(gm_raw$income))` NA values in the income variable spread over `r sum(!(is.na(country_summary$miss)))` countries. These countries do not have any income values recorded in the dataset hence we are not able to compute any values to replace the NA values. Hence, in any calculation involving income we will ignore the following countries `r country_summary_na$Country`.
 
 ## Data Dispersion
-We have data about `r nrow(country_all)` countries which are divided into `r nrow(regionwise_summary)` regions. Our data has been gathered over `r max(gm_raw$Year) - min(gm_raw$Year)` years starting from `r min(gm_raw$Year)`  up till ` r max(gm_raw$Year)`. The population of all countries changed over time with `r gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1]`  from `r gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1]` region having the highest population in 2015 and `r gm_nona[gm_nona$population==min(gm_nona[gm_nona$Year==2015,4]),1]` from `r gm_nona[gm_nona$population==min(gm_nona[gm_nona$Year==2015,4]),6]` region having the lowest population in 2015.
+We have data about `r nrow(country_all)` countries which are divided into `r nrow(regionwise_summary)` regions. Our data has been gathered over `r max(gm_raw$Year) - min(gm_raw$Year)` years starting from `r min(gm_raw$Year)`  up till `r max(gm_raw$Year)` . The population of all countries changed over time with `r gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1]`  from `r gm_nona[gm_nona$population==max(gm_nona[gm_nona$Year==2015,4]),1]` region having the highest population in 2015 and `r gm_nona[gm_nona$population==min(gm_nona[gm_nona$Year==2015,4]),1]` from `r gm_nona[gm_nona$population==min(gm_nona[gm_nona$Year==2015,4]),6]` region having the lowest population in 2015.
 
-The `r nrow(regionwise_summary)` regions do not have equal number of countries with `r regionwise_summary[regionwise_summary$total==max(regionwise_summary$total),1]` having the highest number of countries (`r regionwise_summary[regionwise_summary$total==max(regionwise_summary$total),2]`) and `r regionwise_summary[regionwise_summary$total==min(regionwise_summary$total),1]` having the lowest number of countries (`rregionwise_summary[regionwise_summary$total==min(regionwise_summary$total),2]`).
+The `r nrow(regionwise_summary)` regions do not have equal number of countries with `r regionwise_summary[regionwise_summary$total==max(regionwise_summary$total),1]` having the highest number of countries (`r  regionwise_summary[regionwise_summary$total==max(regionwise_summary$total),2]`) and `r regionwise_summary[regionwise_summary$total==min(regionwise_summary$total),1]` having the lowest number of countries (`r regionwise_summary[regionwise_summary$total==min(regionwise_summary$total),2]`).
 
 Life expectacy has varied greatly with Fiji, French Polynesia, and Samoa showing a low of 1 year life expectacy in the years 1875, 1918, and 1918 respectively. With `r gm_nona[gm_nona$life==max(gm_nona$life),1]` showing the highest life expectacy of `r gm_nona[gm_nona$life==max(gm_nona$life),3]` in `r gm_nona[gm_nona$life==max(gm_nona$life),2]`. The overall mean for life was `r mean(gm_nona[gm_nona$Year==2015,3])` in 2015. Regionwise this  was 
 
@@ -97,7 +94,6 @@ Income has range has been very wide with United Arab Emirates having the peak in
 ## Outliers
 
 ```{r Outliers, echo=FALSE, message=FALSE, warning=FALSE}
-par(mfrow=c(1,2))
 ggplot(gm_nona, aes(x = region, y = life))  + geom_boxplot(outlier.colour = "red") +  
 geom_jitter(position = position_jitter(width = 0.1, height = 0), alpha = 1/4) + labs(title="Life Expectancy Trending Over Region", x="Region", y="Life")
 
@@ -136,7 +132,7 @@ region_life_year[region_life_year$Year%%10 == 0,] %>%
 We see a definite correlation between life and income levels, we start seeing some oddities when we go part $50,000 where the increase in income has less effect on the increase in life expectancy.
 
 
-## Clustering
+### Clustering
 
 We have done the custering for data in the year 2015. When doing clustering we will need to omit the rows with missing values in income field.
 
@@ -205,3 +201,9 @@ We choose 2 clusters based on silhouette method. We see similar results with the
 
 ## Summary
 We see that at the same income level,  increase in average life expectancy varies based on region. It increases sharply in 1950's for all regions but in different levels. Average life expectancy has not increased in all regions at the same rate over the years. Middle east region has lead the increase since 1950. At 50,000 income level the increase in life expectancy stop increasing as sharply and we see that the growth is minimal.
+
+```{r}
+
+warnings()
+```
+
